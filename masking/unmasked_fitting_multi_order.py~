@@ -1,0 +1,128 @@
+import numpy as np
+import pandas as pd
+import pylab as plt
+import matplotlib
+from astropy import units as u
+from starkit.fitkit.likelihoods import SpectralChi2Likelihood as Chi2Likelihood, SpectralL1Likelihood
+from starkit.gridkit import load_grid
+from starkit.fitkit.multinest.base import MultiNest, MultiNestResult
+from starkit import assemble_model, operations
+from starkit.fitkit import priors
+from starkit.base.operations.spectrograph import (Interpolate, Normalize,
+                                                  NormalizeParts,InstrumentConvolveGrating)
+from starkit.base.operations.stellar import (RotationalBroadening, DopplerShift)
+from starkit.fix_spectrum1d import SKSpectrum1D
+from specutils import read_fits_file,plotlines
+import numpy as np
+import os,scipy
+from specutils import Spectrum1D,rvmeasure
+import datetime,glob
+import model_tester_updated as mt
+from matplotlib.backends.backend_pdf import PdfPages
+
+import sys
+
+
+def multipage(filename, figs=None, dpi=200):
+    pp = PdfPages(filename)
+    if figs is None:
+        figs = [plt.figure(n) for n in plt.get_fignums()]
+    for fig in figs:
+        fig.savefig(pp, format='pdf')
+    pp.close()
+
+
+#This cell loads the data and the model grid. It then concatenates the grid to the model parameters such as 
+#v_rad, v_rot. All data is used here, with no masking
+
+apogee_vals = {"teff_0":4026.56,
+                        "logg_0":1.653,
+                        "mh_0":0.447044,
+                        "alpha_0":0.020058,
+                        "vrot_1":0.928,
+                        "vrad_2":-48.4008,
+                        "R_3":24000.}
+
+
+
+starname = 'NGC6791_J19205+3748282'
+
+order = str(34)
+
+specdir = '/u/ghezgroup/data/metallicity/nirspec/spectra/'
+testspec_list = specdir+starname+'_order'+order+'*.dat'
+testspec_path = glob.glob(testspec_list)
+
+snr = mt.get_snr(starname, order)
+
+
+starspectrumall = read_fits_file.read_nirspec_dat(testspec_path,desired_wavelength_units='micron')
+    
+#waverange = [np.amin(starspectrumall.wavelength.value[:970]), np.amax(starspectrumall.wavelength.value[:970])]
+waverange = [np.amin(starspectrumall.wavelength.value[:970]), np.amax(starspectrumall.wavelength.value[:970])]
+starspectrum35 = read_fits_file.read_nirspec_dat(testspec_path,desired_wavelength_units='Angstrom',
+                                                 wave_range=waverange)
+starspectrum35.uncertainty = (np.zeros(len(starspectrum35.flux.value))+1.0/np.float(snr))*starspectrum35.flux.unit
+
+print testspec_path
+
+#g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2000_6000_w21500_22220_R40000_o35.h5') #for order 35
+#g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2500_6000_w22350_22900_R40000_o34.h5') #for order 34
+g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2500_6000_w20000_24000_R40000.h5')
+
+w,f = g()
+
+testspec_w = np.linspace(w[0],w[-1],np.amax(w)-np.amin(w))
+testspec_f = np.ones(len(testspec_w))
+testspec_u = np.ones(len(testspec_w))*0.001
+testspec = SKSpectrum1D.from_array(wavelength=testspec_w*u.angstrom, flux=testspec_f*u.Unit('erg/s/cm^2/angstrom'), uncertainty=testspec_u*u.Unit('erg/s/cm^2/angstrom'))
+
+
+interp1 = Interpolate(starspectrum35)
+convolve1 = InstrumentConvolveGrating.from_grid(g,R=24000)
+rot1 = RotationalBroadening.from_grid(g,vrot=np.array([10.0]))
+norm1 = Normalize(starspectrum35,2)
+
+# concatenate the spectral grid (which will have the stellar parameters) with other 
+# model components that you want to fit
+model = g | rot1 |DopplerShift(vrad=0.0)| convolve1 | interp1 | norm1
+
+# add likelihood parts
+like1 = Chi2Likelihood(starspectrum35)
+#like1_l1 = SpectralL1Likelihood(spectrum)
+
+fit_model = model | like1
+
+w, f = model()
+print model
+
+fig = plt.figure(figsize=(12,10))
+fig2 = plt.figure(figsize=(12,10))
+ax = fig.add_subplot(1, 1, 1)
+
+
+gc_result = mt.run_multinest_fit_rv_constrained(fit_model, apogee_vals["vrad_2"],0.11)
+
+
+gc_result.to_hdf("/u/rbentley/metallicity/spectra_fits/masked_fit_results/unmasked_rv_constrained_"+starname+"_order"+order+".h5")
+
+print "chi squared val ", like1
+
+sigmas = gc_result.calculate_sigmas(1)
+
+#Makes plots of S_lambda masked model
+
+#print gc_result
+print gc_result
+for a in gc_result.median.keys():
+    setattr(model,a,gc_result.median[a])
+
+w,f = model()
+gc_result.plot_triangle(parameters=['teff_0','logg_0','mh_0','alpha_0','vrot_1','vrad_2'])
+plt.figure(figsize=(15,7))
+plt.plot(starspectrum35.wavelength.value/(gc_result.median['vrad_2']/3e5+1.0),starspectrum35.flux)
+plt.plot(w/(gc_result.median['vrad_2']/3e5+1.0),f)
+plotlines.oplotlines(angstrom=True)
+plt.xlabel('Wavelength (Angstrom)')
+plt.ylabel('Flux')
+plt.show()

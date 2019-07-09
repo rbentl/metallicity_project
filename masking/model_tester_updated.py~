@@ -1,0 +1,202 @@
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+import matplotlib
+from astropy import units as u
+from starkit.fitkit.likelihoods import SpectralChi2Likelihood as Chi2Likelihood, SpectralL1Likelihood
+from starkit.gridkit import load_grid
+from starkit.fitkit.multinest.base import MultiNest, MultiNestResult
+from starkit import assemble_model, operations
+from starkit.fitkit import priors
+from starkit.base.operations.spectrograph import (Interpolate, Normalize,
+                                                  NormalizeParts,InstrumentConvolveGrating)
+from starkit.base.operations.stellar import (RotationalBroadening, DopplerShift)
+from specutils import read_fits_file,plotlines
+import numpy as np
+import os,scipy
+from scipy import signal
+from specutils import Spectrum1D,rvmeasure
+from starkit.fix_spectrum1d import SKSpectrum1D
+import datetime,glob
+import gc
+from matplotlib.backends.backend_pdf import PdfPages
+
+import sys
+import os
+
+def closest (num, arr):
+    curr = 0
+    for index in range (len (arr)):
+        if abs (num - arr[index]) < abs (num - arr[curr]):
+            curr = index
+           
+    return curr
+
+def run_multinest_fit(fit_model):
+    
+    teff_prior = priors.UniformPrior(1000,6000)
+    logg_prior = priors.UniformPrior(0.1,4.0)
+    mh_prior = priors.UniformPrior(-2.0,1.0)
+    alpha_prior = priors.UniformPrior(-0.25,0.5)
+    vrot_prior = priors.UniformPrior(0,350.0)
+    vrad_prior1 = priors.UniformPrior(-1000,1000)
+    #R_prior1 = priors.UniformPrior(1500,5000)
+    R_prior1 = priors.FixedPrior(24000)
+    
+    # make a MultiNest fitting object with the model and the prior
+    gc_fitobj = MultiNest(fit_model, [teff_prior, logg_prior, mh_prior, alpha_prior,vrot_prior, vrad_prior1,R_prior1])
+    # Run the fit using the MultiNest sampler.
+    # Will take about 5-10 minutes to run for high resolution Phoenix grid
+    gc_result = gc_fitobj.run()
+
+    
+    # summary statistics like the mean and median can be accessed as dictionaries
+    print(gc_result.median)
+    print(gc_result.mean), "end"
+
+    # can also compute 1 sigma intervals (or arbitrary)
+    gc_result.calculate_sigmas(1)
+
+    return gc_result
+
+
+def calc_residuals(best_fit_flux, obs_flux):
+    print len(best_fit_flux), len(obs_flux)
+    if len(best_fit_flux) != len(obs_flux):
+        best_fit_flux = signal.resample(best_fit_flux, len(obs_flux))
+
+    residuals = obs_flux - best_fit_flux
+
+    return residuals
+
+
+def residual_masked_data(flux,wavelength,uncert,residuals,limit):
+
+    new_f = np.array([])
+    new_w = np.array([])
+    new_u = np.array([])
+    
+    for i in range(len(residuals)):
+        if abs(residuals[i]) < limit:
+            print flux[i], len(new_f)
+            new_f = np.append(new_f, flux[i])
+            new_w = np.append(new_w, wavelength[i])
+            new_u = np.append(new_u, uncert[i])
+        
+
+
+    print len(flux), len(new_f)
+    return new_f, new_w, new_u
+
+
+def find_slopes(model, param, param_vals):
+    w_all = []
+    f_all = []
+    R_all = []
+   
+    for i in range(len(param_vals)):
+        if param is 'teff':
+            model.teff_0 = param_vals[i]
+        elif param is 'logg':
+            model.logg_0 = param_vals[i]
+        elif param is 'mh':
+            model.mh_0 = param_vals[i]
+
+        w,f = model()
+        R_all += [(np.amax(f) - f)/np.amax(f)]
+        w_all += [w]
+        f_all += [f]
+
+    #print f
+    slopes = []
+    for j in range(len(w)):
+        dflux = []
+        if len(param_vals) > 1:
+            for i in range(len(param_vals)):
+                dflux += [f_all[i][j] - f_all[0][j]]
+            fit_params = np.polyfit(param_vals, dflux, 1)
+            slopes += [fit_params[0]]
+
+
+    return slopes
+
+
+def slope_masked_data(wavelength, flux, uncert, slopes, limit):
+    new_flux = np.array([])
+    new_wave = np.array([])
+    new_uncert = np.array([])
+
+    
+    
+    for i in range(len(flux)):
+        if abs(slopes[i]) < limit:
+            #print flux[i], len(new_flux)
+            new_flux = np.append(new_flux, flux[i])
+            new_wave = np.append(new_wave, wavelength[i])
+            new_uncert = np.append(new_uncert, uncert[i])
+        
+
+    return new_flux, new_wave, new_uncert
+
+def r_val(model, param=None, param_val=None):
+    
+    if param is 'teff':
+        model.teff_0 = param_val
+    elif param is 'logg':
+        model.logg_0 = param_val
+    elif param is 'mh':
+        model.mh_0 = param_val
+
+    w,f = model()
+    R = 100*(np.amax(f) - f)/np.amax(f)
+    R0 = 100*(1.-f)/1.
+
+    return R,R0,np.amax(f)
+
+
+def r_val_polynomial(model):
+
+    w,f = model()
+
+    p = np.polyfit(w,f,3)
+
+    continuum = p[0]*w**3 + p[1]*w**2 + p[2]*w + p[3]
+
+    R = [(continuum[i] - f[i])/continuum[i] for i in range(len(f))]
+
+    return R
+
+
+def s_lambda(model, param, param_val,increment):
+    
+    if param is 'teff':
+        model.teff_0 = param_val
+    elif param is 'logg':
+        model.logg_0 = param_val
+    elif param is 'mh':
+        model.mh_0 = param_val
+
+    R_cen = r_val_polynomial(model)
+
+    if param is 'teff':
+        model.teff_0 = param_val+increment
+    elif param is 'logg':
+        model.logg_0 = param_val+increment
+    elif param is 'mh':
+        model.mh_0 = param_val+increment
+
+    R_up = r_val_polynomial(model)
+
+    if param is 'teff':
+        model.teff_0 = param_val-increment
+    elif param is 'logg':
+        model.logg_0 = param_val-increment
+    elif param is 'mh':
+        model.mh_0 = param_val-increment
+
+    R_dw = r_val_polynomial(model)
+    
+    s_lambda = [100*(R_up[i] - R_dw[i])/R_cen[i] for i in range(len(R_up))]
+
+    return s_lambda
+    

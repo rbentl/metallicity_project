@@ -1,0 +1,67 @@
+import numpy as np
+import pandas as pd
+import pylab as plt
+import matplotlib
+from astropy import units as u
+from starkit.fitkit.likelihoods import SpectralChi2Likelihood as Chi2Likelihood, SpectralL1Likelihood
+from starkit.gridkit import load_grid
+from starkit.fitkit.multinest.base import MultiNest, MultiNestResult
+from starkit import assemble_model, operations
+from starkit.fitkit import priors
+from starkit.base.operations.spectrograph import (Interpolate, Normalize,
+                                                  NormalizeParts,InstrumentConvolveGrating)
+from starkit.base.operations.stellar import (RotationalBroadening, DopplerShift)
+from starkit.fix_spectrum1d import SKSpectrum1D
+from specutils import read_fits_file,plotlines
+import numpy as np
+import os,scipy
+from specutils import Spectrum1D,rvmeasure
+import datetime,glob
+import model_tester_updated as mt
+from matplotlib.backends.backend_pdf import PdfPages
+
+import sys
+
+
+specdir = '/u/ghezgroup/data/metallicity/nirspec/spectra/'
+testspec_list = specdir+'NGC6791_J19205+3748282_order35*.dat'
+testspec_path = glob.glob(testspec_list)
+
+snr = 50.
+
+starspectrumall = read_fits_file.read_nirspec_dat(testspec_path,desired_wavelength_units='micron')
+    
+#waverange = [np.amin(starspectrumall.wavelength.value[:970]), np.amax(starspectrumall.wavelength.value[:970])]
+waverange = [np.amin(starspectrumall.wavelength.value[:970]), np.amax(starspectrumall.wavelength.value[:970])]
+starspectrum35 = read_fits_file.read_nirspec_dat(testspec_path,desired_wavelength_units='Angstrom',
+                                                 wave_range=waverange)
+starspectrum35.uncertainty = (np.zeros(len(starspectrum35.flux.value))+1.0/np.float(snr))*starspectrum35.flux.unit
+
+print testspec_path
+
+g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2000_6000_w21500_22220_R40000_o35.h5') #for order 35
+#g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2500_6000_w22350_22900_R40000_o34.h5') #for order 34
+
+w,f = g()
+
+
+interp1 = Interpolate(starspectrum35)
+convolve1 = InstrumentConvolveGrating.from_grid(g,R=24000)
+rot1 = RotationalBroadening.from_grid(g,vrot=np.array([10.0]))
+norm1 = Normalize(starspectrum35,2)
+
+# concatenate the spectral grid (which will have the stellar parameters) with other 
+# model components that you want to fit
+model = g | rot1 |DopplerShift(vrad=0.0)| convolve1 | interp1 | norm1
+
+
+gc_result = MultiNestResult.from_hdf5("/u/rbentley/metallicity/spectra_fits/masked_fit_results/sensitivity_cut_3.h5")
+
+for a in gc_result.keys():
+    setattr(model,a,gc_result[a])
+
+
+sl_wavelength, sl_flux = model()
+
+plt.plot(sl_wavelength, sl_flux)
+plt.show()

@@ -1,0 +1,31 @@
+import numpy as np
+import pandas as pd
+import pylab as plt
+import matplotlib
+from astropy import units as u
+from starkit.fitkit.likelihoods import SpectralChi2Likelihood as Chi2Likelihood, SpectralL1Likelihood
+from starkit.gridkit import load_grid
+from starkit.fitkit.multinest.base import MultiNest, MultiNestResult
+from starkit import assemble_model, operations
+from starkit.fitkit import priors
+from starkit.base.operations.spectrograph import (Interpolate, Normalize,
+                                                  NormalizeParts,InstrumentConvolveGrating)
+from starkit.base.operations.stellar import (RotationalBroadening, DopplerShift)
+from starkit.fix_spectrum1d import SKSpectrum1D
+from specutils import read_fits_file,plotlines
+import numpy as np
+import os,scipy
+from specutils import Spectrum1D,rvmeasure
+import datetime,glob
+import model_tester_updated as mt
+from matplotlib.backends.backend_pdf import PdfPages
+
+
+h5_files_path = ['sensitivity_cut_0015625_order35.h5', 'sensitivity_cut_003125_order35.h5', 'sensitivity_cut_00625_order35.h5', 'sensitivity_cut_0125_order35.h5', 'sensitivity_cut_025_order35.h5', 'sensitivity_cut_05_order35.h5', 'sensitivity_cut_20_NGC6791_J19205+3748282_order35.h5', 'sensitivity_cut_3_order35.h5', 'sensitivity_cut_4_NGC6791_J19205+3748282_order35.h5', 'sensitivity_cut_5_NGC6791_J19205+3748282_order35.h5', 'sensitivity_cut_6.5_NGC6791_J19205+3748282_order35.h5', 'sensitivity_cut_75_NGC6791_J19205+3748282_order35.h5']
+
+
+
+
+
+
+for 
