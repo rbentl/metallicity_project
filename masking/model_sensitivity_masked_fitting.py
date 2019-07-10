@@ -50,7 +50,7 @@ print "Cutting at ",sl_cut_val
 
 starname = 'NGC6791_J19205+3748282'
 
-order = str(34)
+order = str(36)
 
 specdir = '/u/ghezgroup/data/metallicity/nirspec/spectra/'
 testspec_list = specdir+starname+'_order'+order+'*.dat'
@@ -69,7 +69,8 @@ starspectrum35.uncertainty = (np.zeros(len(starspectrum35.flux.value))+1.0/np.fl
 print testspec_path
 
 #g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2000_6000_w21500_22220_R40000_o35.h5') #for order 35
-g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2500_6000_w22350_22900_R40000_o34.h5') #for order 34
+#g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2500_6000_w22350_22900_R40000_o34.h5') #for order 34
+g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2500_6000_w21000_21600_R40000_o36.h5')
 
 w,f = g()
 
@@ -190,7 +191,7 @@ gc_result_masked_sl = mt.run_multinest_fit(masked_model_sl)
 
 cutoffstr = str(sys.argv[1])
 
-gc_result_masked_sl.to_hdf("/u/rbentley/metallicity/spectra_fits/masked_fit_results/order34/sensitivity_cut_"+cutoffstr+"_"+starname+"_order"+order+".h5")
+gc_result_masked_sl.to_hdf("/u/rbentley/metallicity/spectra_fits/masked_fit_results/order36/sensitivity_cut_"+cutoffstr+"_"+starname+"_order"+order+".h5")
 
 print "chi squared val ", like_sl
 
@@ -234,7 +235,7 @@ plt.ylabel("Flux", size=12)
 plt.ylim(-0.3,1.2)
 #plt.title("Order 35 Observed and Model fluxes (regions with $S_{\lambda}$ < "+str(sys.argv[1])+" masked)", size=15)
 
-plt.title("Order 34 Observed and Model fluxes (No mask)", size=15)
+plt.title("Order 36 Observed and Model fluxes (No mask)", size=15)
 
 plt.legend(loc='lower right', fontsize=11)
 plt.tick_params(axis='both', which='major', labelsize=11)
@@ -254,17 +255,17 @@ plotlines.oplotlines(angstrom=True,arcturus=True,alpha=0.5,size=6,highlight=['Sc
 axpresent.set_xlabel("Wavelength (angstroms)", size=12)
 axpresent.set_ylabel("Flux", size=12)
 axpresent.set_ylim(-0.3,1.2)
-axpresent.set_title("Order 35 Observed and Model fluxes (unmasked)", size=15)
+axpresent.set_title("Order 36 Observed and Model fluxes (unmasked)", size=15)
 axpresent.legend(loc='upper right', fontsize=11)
 
 
 
 fit_results_file = open("/u/ghezgroup/data/metallicity/nirspec/spectra_fits/pdfs/sl_masked_fit_results_output.lis","a+")
-fit_results_file.write("Fitting results with S_l < "+str(sys.argv[1])+" removed order 34\n")
+fit_results_file.write("Fitting results with S_l < "+str(sys.argv[1])+" removed order 36\n")
 fit_results_file.write(str(gc_result_masked_sl)+"\n")
 fit_results_file.write(str(sigma_sl)+"\n\n\n")
 fit_results_file.close()
 
 
 
-multipage("/u/ghezgroup/data/metallicity/nirspec/spectra_fits/pdfs/NGC6791_J19205+3748282_order34_sl<"+str(sys.argv[1])+"_cut_fixed_vrad.pdf")
+multipage("/u/ghezgroup/data/metallicity/nirspec/spectra_fits/pdfs/NGC6791_J19205+3748282_order36_sl<"+str(sys.argv[1])+"_cut_fixed_vrad.pdf")

@@ -27,7 +27,7 @@ def getKey(item):
 
 starname = 'NGC6791_J19205+3748282'
 
-order = str(35)
+order = str(36)
 
 specdir = '/u/ghezgroup/data/metallicity/nirspec/spectra/'
 testspec_list = specdir+starname+'_order'+order+'*.dat'
@@ -48,13 +48,15 @@ starspectrum35.uncertainty = (np.zeros(len(starspectrum35.flux.value))+1.0/np.fl
 
 
 
-h5_files_us = glob.glob('/u/rbentley/metallicity/spectra_fits/masked_fit_results/order35/*.h5')
+h5_files_us = glob.glob('/u/rbentley/metallicity/spectra_fits/masked_fit_results/order36/*.h5')
 
 sl_val = []
 mask_len = []
 vrad = []
 
-g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2000_6000_w21500_22220_R40000_o35.h5') #for order 35
+g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2500_6000_w21000_21600_R40000_o36.h5') #for order 36
+
+#g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2000_6000_w21500_22220_R40000_o35.h5') #for order 35
 
 #g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2500_6000_w22350_22900_R40000_o34.h5') #for order 34
 
