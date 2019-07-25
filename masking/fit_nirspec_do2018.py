@@ -231,10 +231,10 @@ def fit_star_multi_order(starname,g,specdir='/group/data/nirspec/spectra/',
                          R_fixed=None,logg_fixed=None,l1norm=False):
 
     # fit a spectrum of a star with multiple orders that can have different velocities
-    file1 = glob.glob(specdir+starname+'_order34_*.dat')
-    file2 = glob.glob(specdir+starname+'_order35_*.dat')
-    file3 = glob.glob(specdir+starname+'_order36_*.dat')
-    file4 = glob.glob(specdir+starname+'_order37_*.dat')
+    file1 = glob.glob(specdir+starname+'_order34*.dat')
+    file2 = glob.glob(specdir+starname+'_order35*.dat')
+    file3 = glob.glob(specdir+starname+'_order36*.dat')
+    file4 = glob.glob(specdir+starname+'_order37*.dat')
 
     starspectrum34 = read_fits_file.read_nirspec_dat(file1,desired_wavelength_units='Angstrom',wave_range=[2.2406, 2.271])
     starspectrum34.uncertainty = (np.zeros(len(starspectrum34.flux.value))+1.0/np.float(snr))*starspectrum34.flux.unit
@@ -251,22 +251,22 @@ def fit_star_multi_order(starname,g,specdir='/group/data/nirspec/spectra/',
 
 
     interp1 = Interpolate(starspectrum34)
-    convolve1 = InstrumentConvolveGrating.from_grid(g,R=30000)
+    convolve1 = InstrumentConvolveGrating.from_grid(g,R=24000)
     rot1 = RotationalBroadening.from_grid(g,vrot=np.array([10.0]))
     norm1 = Normalize(starspectrum34,nnorm)
 
     interp2 = Interpolate(starspectrum35)
-    convolve2 = InstrumentConvolveGrating.from_grid(g,R=30000)
+    convolve2 = InstrumentConvolveGrating.from_grid(g,R=24000)
     #rot2 = RotationalBroadening.from_grid(g,vrot=np.array([10.0]))
     norm2 = Normalize(starspectrum35,nnorm)
 
     interp3 = Interpolate(starspectrum36)
-    convolve3 = InstrumentConvolveGrating.from_grid(g,R=30000)
+    convolve3 = InstrumentConvolveGrating.from_grid(g,R=24000)
     #rot3 = RotationalBroadening.from_grid(g,vrot=np.array([10.0]))
     norm3 = Normalize(starspectrum36,nnorm)
 
     interp4 = Interpolate(starspectrum37)
-    convolve4 = InstrumentConvolveGrating.from_grid(g,R=30000)
+    convolve4 = InstrumentConvolveGrating.from_grid(g,R=24000)
     #rot4 = RotationalBroadening.from_grid(g,vrot=np.array([10.0]))
     norm4 = Normalize(starspectrum37,nnorm)
 
@@ -340,7 +340,7 @@ def fit_star_multi_order(starname,g,specdir='/group/data/nirspec/spectra/',
              vrad_prior1,vrad_prior2,vrad_prior3,vrad_prior4,R_prior1,R_prior2,\
              R_prior3,R_prior4])
 
-    fitobj.run(verbose=verbose,importance_nested_sampling=False,n_live_points=400)
+    fitobj.run()
     result=fitobj.result
 
     if l1norm:
@@ -418,10 +418,10 @@ def plot_multi_order_fit(starname,g=None,savefile=None,specdir='/group/data/nirs
     savedir = '../nirspec_fits/',snr=30.0,nnorm=2,save_model=False):
     # plot the results of a multiple order fit on observed spectrum.
 
-    file1 = glob.glob(specdir+starname+'_order34_*.dat')
-    file2 = glob.glob(specdir+starname+'_order35_*.dat')
-    file3 = glob.glob(specdir+starname+'_order36_*.dat')
-    file4 = glob.glob(specdir+starname+'_order37_*.dat')
+    file1 = glob.glob(specdir+starname+'_order34*.dat')
+    file2 = glob.glob(specdir+starname+'_order35*.dat')
+    file3 = glob.glob(specdir+starname+'_order36*.dat')
+    file4 = glob.glob(specdir+starname+'_order37*.dat')
 
     if savefile is None:
         savefile = os.path.join(savedir,starname+'_results.h5')

@@ -1,0 +1,25 @@
+import subprocess
+
+
+import numpy as np
+import os,scipy
+
+import sys
+
+for i in np.concatenate((np.arange(0.,0.5,0.1),np.linspace(0.5,10.,20),np.arange(15.,60.,5))):
+    print i
+    proc = subprocess.Popen(['python','/u/rbentley/metallicity/code/masking/model_sensitivity_masked_fitting.py',str(i)])
+    #print proc
+    while True:
+        if proc.poll() is not None:
+            break
+        #residual_mm = proc.returncode
+        #print residual_mm
+
+'''
+proc = subprocess.Popen(['python','model_s_masked_fitting.py',str(0.05)])
+#print proc
+while True:
+    if proc.poll() is not None:
+        break
+'''

@@ -27,7 +27,7 @@ def getKey(item):
 
 starname = 'NGC6791_J19205+3748282'
 
-order = str(36)
+order = str(sys.argv[1])
 
 specdir = '/u/ghezgroup/data/metallicity/nirspec/spectra/'
 testspec_list = specdir+starname+'_order'+order+'*.dat'
@@ -54,12 +54,20 @@ sl_val = []
 mask_len = []
 vrad = []
 
-g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2500_6000_w21000_21600_R40000_o36.h5') #for order 36
+if float(order) == 36.:
+    g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2500_6000_w21000_21600_R40000_o36.h5') #for order 36
 
-#g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2000_6000_w21500_22220_R40000_o35.h5') #for order 35
+elif float(order) == 35.:
+    g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2000_6000_w21500_22220_R40000_o35.h5') #for order 35
 
-#g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2500_6000_w22350_22900_R40000_o34.h5') #for order 34
+elif float(order) == 34.:
+    g = load_grid('/u/rbentley/metallicity/grids/phoenix_t2500_6000_w22350_22900_R40000_o34.h5') #for order 34
 
+else:
+    print "Need to code in that order"
+    exit()
+    
+    
 interp1 = Interpolate(starspectrum35)
 convolve1 = InstrumentConvolveGrating.from_grid(g,R=24000)
 rot1 = RotationalBroadening.from_grid(g,vrot=np.array([10.0]))
@@ -79,10 +87,8 @@ h5_files = [i[1] for i in cut_lis]
 
     
 for filename in h5_files:
-    plt.figure(figsize=(20,6))
-    specax = plt.subplot()
 
-    slax = specax.twinx()
+
 
     gc_result = MultiNestResult.from_hdf5(filename)
 
@@ -110,7 +116,13 @@ for filename in h5_files:
 
 
     w,f  = model()
+    '''
+    plt.figure(figsize=(20,6))
 
+    specax = plt.subplot()
+
+    slax = specax.twinx()
+    
     specax.plot(starspectrum35.wavelength.value, starspectrum35.flux.value, color='blue')
 
     specax.plot(w, f, color='green')
@@ -119,24 +131,54 @@ for filename in h5_files:
 
     #slax.semilogy(w, sl_mh, color='0.5')
 
-    slax.set_title(filename.split('_')[5] + '     '+str(gc_result.median['vrad_2']))
-    
+    slax.set_title(filename.split('_')[5] + '     '+str(len(mask_sl_f))+'     '+str(gc_result.median['vrad_2']))
+    plotlines.oplotlines(angstrom=True,arcturus=True,alpha=0.5,size=6,highlight=['Sc'])
     #sl_val += [float(filename.split('_')[5])]
     #mask_len += [len(mask_sl_f)]
     #vrad += [gc_result.median['vrad_2']]
-    sl_val += [(float(filename.split('_')[5]),len(mask_sl_f),gc_result.median['vrad_2'],w,f)]
-    plt.show()
+    '''
+    sl_val += [(float(filename.split('_')[5]),len(mask_sl_f),gc_result.median['vrad_2'],gc_result.median['logg_0'],gc_result.median['mh_0'],gc_result.median['alpha_0'],w,f)]
+ 
+    print gc_result
     print float(filename.split('_')[5]),len(mask_sl_f),gc_result.median['vrad_2']
+
+
+f= plt.figure(figsize=(12,11))
+rvax  = f.add_subplot(5,1,1)
+loggax  = f.add_subplot(5,1,2,sharex=rvax)
+mhax  = f.add_subplot(5,1,3)
+alphaax = f.add_subplot(5,1,4)
+lenax = f.add_subplot(5,1,5)
+
     
 sl_val = sorted(sl_val)
-ax = plt.subplot()
+#ax = plt.subplot()
     
-ax.plot([i[0] for i in sl_val],[i[2] for i in sl_val],'ro')
-ax.set_xscale('log')
+rvax.plot([i[0] for i in sl_val],[i[2] for i in sl_val], color='red')
+rvax.set_xscale('log')
+rvax.set_ylabel('Radial Velocity')
 
-ax2 = ax.twinx()
+loggax.plot([i[0] for i in sl_val],[i[3] for i in sl_val], color='blue')
+loggax.set_xscale('log')
+loggax.set_ylabel('Log g')
 
-ax2.plot([i[0] for i in sl_val],[i[1] for i in sl_val], 'bo')
+mhax.plot([i[0] for i in sl_val],[i[4] for i in sl_val], color='green')
+mhax.set_xscale('log')
+mhax.set_ylabel('[M/H]')
+
+alphaax.plot([i[0] for i in sl_val],[i[5] for i in sl_val], color='yellow')
+alphaax.set_xscale('log')
+alphaax.set_ylabel('$alpha$')
+
+lenax.plot([i[0] for i in sl_val],[i[1] for i in sl_val], color='black')
+lenax.set_xscale('log')
+lenax.set_xlabel('$S_{\lambda}$ cutoff')
+lenax.set_ylabel('# points masked')
+
+
+#ax2 = ax.twinx()
+
+#ax2.plot([i[0] for i in sl_val],[i[1] for i in sl_val], 'bo')
 
 #
 plt.show()
