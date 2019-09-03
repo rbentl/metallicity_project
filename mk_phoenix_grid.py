@@ -50,7 +50,7 @@ def mk_phoenix_grid(directory='/Volumes/nyx_backup/data/phoenix2016/',wave_range
 
     #os.chdir('/u/rbentley/metallicity/spectra_fits')
     if savefile is None:
-        savefile = '/u/rbentley/metallicity/spectra_fits/phoenix_t%i_%i_w%i_%i_R%i.h5' % (int(teff_range[0]),int(teff_range[1]),
+        savefile = '/u/rbentley/metallicity/grids/phoenix_t%i_%i_w%i_%i_R%i.h5' % (int(teff_range[0]),int(teff_range[1]),
             int(wave_range[0]),int(wave_range[1]),int(R))
     #os.chdir('/u/rbentley/metallicity/spectra_fits')
     print os.getcwd()
@@ -94,5 +94,23 @@ def mk_phoenix_grid_apogee():
     # make R = 40000 version of nirspec grid
     # make a phoenix grid for K-band and NIRSPEC resolution
     mk_phoenix_grid(wave_range=[15000,17000],teff_range=[2500,6000],logg_range=[0,4.5],mh_range=[-2.0,1.0],alpha_range=[-1,1],R=40000) #23500-24300
+
+def mk_phoenix_grid_for_quinn_j_band():
+    # make R = 40000 version of nirspec grid
+    # make a phoenix grid for K-band and NIRSPEC resolution
+    mk_phoenix_grid(wave_range=[11800,14200],teff_range=[3000,10000],logg_range=[1,5],mh_range=[-2.0,1.0],alpha_range=[-1,1],R=8000) #23500-24300
+    
+    
+    
+def mk_phoenix_grid_for_quinn_h_band():
+    # make R = 40000 version of nirspec grid
+    # make a phoenix grid for K-band and NIRSPEC resolution
+    mk_phoenix_grid(wave_range=[14700,18000],teff_range=[3000,10000],logg_range=[1,5],mh_range=[-2.0,1.0],alpha_range=[-1,1],R=8000) #23500-24300
+    
+    
+def mk_phoenix_grid_for_quinn_k_band():
+    # make R = 40000 version of nirspec grid
+    # make a phoenix grid for K-band and NIRSPEC resolution
+    mk_phoenix_grid(wave_range=[19600,23800],teff_range=[3000,10000],logg_range=[1,5],mh_range=[-2.0,1.0],alpha_range=[-1,1],R=8000) #23500-24300    
     
     

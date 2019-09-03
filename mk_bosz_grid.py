@@ -10,9 +10,9 @@ import os
 
 
 
-def mk_bosz_grid(directory='/Volumes/data/bosz/',wave_range=[22400,22750],
+def mk_bosz_grid(directory='/Volumes/data/bosz/',wave_range=[15000,17000],
                     teff_range=[2000,6000],logg_range=[0,5],mh_range=[-1.5,1.0],alpha_range=[-1,1],
-                    R=20000,savefile=None):
+                    R=40000,savefile=None):
     '''
     Read the raw bosz grid files and create a grid for Starkit
 
@@ -48,7 +48,7 @@ def mk_bosz_grid(directory='/Volumes/data/bosz/',wave_range=[22400,22750],
                           R_sampling=4)
 
     if savefile is None:
-        savefile = '/u/rbentley/metallicity/spectra_fits/test_bosz_t%i_%i_w%i_%i_R%i.h5' % (int(teff_range[0]),int(teff_range[1]),
+        savefile = '/u/rbentley/metallicity/grids/apogee_bosz_t%i_%i_w%i_%i_R%i.h5' % (int(teff_range[0]),int(teff_range[1]),
             int(wave_range[0]),int(wave_range[1]),int(R))
 
     bgrid.to_hdf(savefile, overwrite=True)
@@ -65,3 +65,25 @@ def mk_bosz_grid_k_nirspec_high_34_36():
     # make a bosz grid for K-band and NIRSPEC resolution
     mk_bosz_grid(wave_range=[21000,22700],teff_range=[2500,6000],logg_range=[0,4.5],mh_range=[-2.0,1.0],alpha_range=[-1,1],R=40000)
 
+
+def mk_bosz_grid_h_apogee():
+    # make R = 40000 version of nirspec grid
+    # make a bosz grid for H-band and APOGEE
+    mk_bosz_grid(wave_range=[15000,17000],teff_range=[2500,6000],logg_range=[0,4.5],mh_range=[-2.0,1.0],alpha_range=[-1,1],R=40000)
+
+def mk_bosz_grid_h_lower_R_apogee():
+    # make R = 40000 version of nirspec grid
+    # make a bosz grid for K-band and NIRSPEC resolution
+    mk_bosz_grid(wave_range=[15000,17000],teff_range=[3500,6000],logg_range=[0,4.5],mh_range=[-1.0,0.5],alpha_range=[-0.25,0.5],R=25000)
+
+
+def mk_bosz_grid_order35():
+    # make R = 40000 version of nirspec grid
+    # make a bosz grid for K-band and NIRSPEC resolution
+    mk_bosz_grid(wave_range=[21000,23000],teff_range=[3600,7000],logg_range=[0.0,4.5],mh_range=[-1.0,0.5],alpha_range=[-0.23,0.5],R=25000)
+
+
+def mk_bosz_grid_order35_trial():
+    # make R = 40000 version of nirspec grid
+    # make a bosz grid for K-band and NIRSPEC resolution
+    mk_bosz_grid(wave_range=[21000,23000],teff_range=[3600,7000],logg_range=[0.5,4.5],mh_range=[-1.0,0.25],alpha_range=[-0.2,0.25],R=25000)
