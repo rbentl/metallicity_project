@@ -1,0 +1,20 @@
+import sl_response_plot_multiorder as slp
+
+mod = slp.load_full_grid()
+
+spec_path = '/u/rbentley/metallicity/spectra/'
+
+
+ngc6791_282 = 'NGC6791_J19205+3748282'
+
+ngc6819_517 = 'NGC6819_J19411+4010517'
+
+m5_208 = 'M5 J15190+0208'
+
+ngc6791_202 = 'NGC6791_J19213390+3750202'
+
+ngc6819_482 = 'NGC6819_J19413439+4017482'
+
+m71_021 = 'M71_J19534827+1848021'
+
+tyc_3544 = 'TYC 3544'

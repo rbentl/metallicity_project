@@ -1,0 +1,11 @@
+import sl_response_plot_multiorder as slp
+from specutils import read_fits_file,plotlines
+import pylab as plt
+import os,scipy
+
+
+
+
+mod = slp.load_full_grid()
+
+c
