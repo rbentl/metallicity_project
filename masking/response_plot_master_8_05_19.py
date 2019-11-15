@@ -12,15 +12,17 @@ print cal_star_names, cal_star_info[1]
 
 spec_path = '/u/rbentley/metallicity/spectra/'
 
-mod = slp.load_full_grid()
+phoenix = slp.load_full_grid_phoenix()
+
+#bosz = slp.load_full_grid_bosz()
 
 sl_val_list = []
 res_val_list = []
 starname_list = []
 
 for starname in cal_star_names:
-    sl_val, sl_data = slp.sl_response_plot_four(starname, mod, specdir = spec_path)
-    res_val, res_data = slp.residual_masked_param_info(starname, mod, specdir = spec_path)
+    sl_val, sl_data = slp.sl_masked_param_info_three_order(starname, phoenix, specdir = spec_path)
+    res_val, res_data = slp.residual_masked_param_info_three_order(starname, phoenix, specdir = spec_path)
     #slp.plot_sl_res_response(sl_val,res_val,starname, savefig=True)
 
     sl_val_list += [sl_val]
@@ -28,4 +30,4 @@ for starname in cal_star_names:
     starname_list += [starname]
 
 
-slp.plot_sl_res_response_allstar(sl_val_list,res_val_list,starname_list, savefig=True)
+slp.plot_sl_res_response_allstar_three_order(sl_val_list,res_val_list,starname_list, savefig=True)

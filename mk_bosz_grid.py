@@ -38,6 +38,7 @@ def mk_bosz_grid(directory='/Volumes/data/bosz/',wave_range=[15000,17000],
     index_filter = (raw_index.teff.between(*teff_range) &
         raw_index.logg.between(*logg_range) &
         raw_index.mh.between(*mh_range) &
+        (raw_index.ch == 0.0) &
         raw_index.alpha.between(*alpha_range))
 
     new_index = raw_index.loc[index_filter]
@@ -48,7 +49,7 @@ def mk_bosz_grid(directory='/Volumes/data/bosz/',wave_range=[15000,17000],
                           R_sampling=4)
 
     if savefile is None:
-        savefile = '/u/rbentley/metallicity/grids/apogee_bosz_t%i_%i_w%i_%i_R%i.h5' % (int(teff_range[0]),int(teff_range[1]),
+        savefile = '/u/rbentley/metallicity/grids/bosz_t%i_%i_w%i_%i_R%i.h5' % (int(teff_range[0]),int(teff_range[1]),
             int(wave_range[0]),int(wave_range[1]),int(R))
 
     bgrid.to_hdf(savefile, overwrite=True)
@@ -80,10 +81,20 @@ def mk_bosz_grid_h_lower_R_apogee():
 def mk_bosz_grid_order35():
     # make R = 40000 version of nirspec grid
     # make a bosz grid for K-band and NIRSPEC resolution
-    mk_bosz_grid(wave_range=[21000,23000],teff_range=[3600,7000],logg_range=[0.0,4.5],mh_range=[-1.0,0.5],alpha_range=[-0.23,0.5],R=25000)
+    mk_bosz_grid(wave_range=[21000,23000],teff_range=[3600,7000],logg_range=[0.0,4.5],mh_range=[-1.0,0.5],alpha_range=[-0.25,0.5],R=25000)
 
 
 def mk_bosz_grid_order35_trial():
     # make R = 40000 version of nirspec grid
     # make a bosz grid for K-band and NIRSPEC resolution
     mk_bosz_grid(wave_range=[21000,23000],teff_range=[3600,7000],logg_range=[0.5,4.5],mh_range=[-1.0,0.25],alpha_range=[-0.2,0.25],R=25000)
+
+def mk_bosz_grid_orders34_37():
+    # make R = 40000 version of nirspec grid
+    # make a bosz grid for K-band and NIRSPEC resolution
+    mk_bosz_grid(wave_range=[20000,24000],teff_range=[3500,7000],logg_range=[0.0,4.5],mh_range=[-2.0,0.5],alpha_range=[-0.25,0.5],R=25000)
+
+def mk_bosz_grid_h_apogee_v2():
+    # make R = 40000 version of nirspec grid
+    # make a bosz grid for H-band and NIRSPEC resolution, to match the PHOENIX grid
+    mk_bosz_grid(wave_range=[15000,17000],teff_range=[3500,7000],logg_range=[0.0,4.5],mh_range=[-2.0,0.5],alpha_range=[-0.25,0.5],R=25000)
